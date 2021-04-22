@@ -58,7 +58,8 @@ class WebAnalyzer {
   /// Get web information
   /// return [InfoBase]
   static InfoBase getInfoFromCache(String url) {
-    final InfoBase info = _map[url]!;
+    var info;
+    info = _map[url]!;
     if (info != null) {
       if (!info._timeout.isAfter(DateTime.now())) {
         _map.remove(url);
