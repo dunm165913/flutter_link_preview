@@ -55,9 +55,15 @@ class _FlutterLinkPreviewState extends State<FlutterLinkPreview> {
 
   @override
   void initState() {
-    _url = widget.url.trim();
-    _info = WebAnalyzer.getInfoFromCache(_url);
-    if (_info == null) _getInfo();
+
+    try {
+      _url = widget.url.trim();
+      _info = WebAnalyzer.getInfoFromCache(_url);
+      if (_info == null) _getInfo();
+    } catch (e) {
+      print("_______VGDGHGFH $e");
+    }
+
     super.initState();
   }
 
@@ -77,55 +83,56 @@ class _FlutterLinkPreviewState extends State<FlutterLinkPreview> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.builder != null) {
-      return widget.builder(_info);
-    }
+    return Text("Fbfgbnfg");
+    // if (widget.builder != null) {
+    //   return widget.builder(_info);
+    // }
 
-    if (_info == null) return const SizedBox();
+    // if (_info == null) return const SizedBox();
 
-    if (_info is WebImageInfo) {
-      return Image.network(
-        (_info as WebImageInfo).image,
-        fit: BoxFit.contain,
-      );
-    }
+    // if (_info is WebImageInfo) {
+    //   return Image.network(
+    //     (_info as WebImageInfo).image,
+    //     fit: BoxFit.contain,
+    //   );
+    // }
 
-    final WebInfo info = _info;
-    if (!WebAnalyzer.isNotEmpty(info.title)) return const SizedBox();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Row(
-          children: [
-            Image.network(
-              info.icon ?? "",
-              fit: BoxFit.contain,
-              width: 30,
-              height: 30,
-              errorBuilder: (context, error, stackTrace) =>
-                  Icon(Icons.link, size: 30, color: widget.titleStyle?.color),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                info.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: widget.titleStyle,
-              ),
-            ),
-          ],
-        ),
-        if (WebAnalyzer.isNotEmpty(info.description)) ...[
-          const SizedBox(height: 8),
-          Text(
-            info.description,
-            maxLines: 5,
-            overflow: TextOverflow.ellipsis,
-            style: widget.bodyStyle,
-          ),
-        ],
-      ],
-    );
+    // final WebInfo info = _info;
+    // if (!WebAnalyzer.isNotEmpty(info.title)) return const SizedBox();
+    // return Column(
+    //   crossAxisAlignment: CrossAxisAlignment.start,
+    //   children: <Widget>[
+    //     Row(
+    //       children: [
+    //         Image.network(
+    //           info.icon ?? "",
+    //           fit: BoxFit.contain,
+    //           width: 30,
+    //           height: 30,
+    //           errorBuilder: (context, error, stackTrace) =>
+    //               Icon(Icons.link, size: 30, color: widget.titleStyle?.color),
+    //         ),
+    //         const SizedBox(width: 8),
+    //         Expanded(
+    //           child: Text(
+    //             info.title,
+    //             maxLines: 1,
+    //             overflow: TextOverflow.ellipsis,
+    //             style: widget.titleStyle,
+    //           ),
+    //         ),
+    //       ],
+    //     ),
+    //     if (WebAnalyzer.isNotEmpty(info.description)) ...[
+    //       const SizedBox(height: 8),
+    //       Text(
+    //         info.description,
+    //         maxLines: 5,
+    //         overflow: TextOverflow.ellipsis,
+    //         style: widget.bodyStyle,
+    //       ),
+    //     ],
+    //   ],
+    // );
   }
 }
