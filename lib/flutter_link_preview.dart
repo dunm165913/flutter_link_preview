@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
-import 'package:gbk2utf8/gbk2utf8.dart';
 import 'package:html/dom.dart' hide Text;
 import 'package:html/parser.dart' as parser;
 import 'package:http/http.dart';
@@ -15,7 +14,7 @@ part 'web_analyzer.dart';
 /// Link Preview Widget
 class FlutterLinkPreview extends StatefulWidget {
   const FlutterLinkPreview({
-    Key key,
+    Key? key,
     @required this.url,
     this.cache = const Duration(hours: 24),
     this.builder,
@@ -26,33 +25,33 @@ class FlutterLinkPreview extends StatefulWidget {
   }) : super(key: key);
 
   /// Web address, HTTP and HTTPS support
-  final String url;
+  final url;
 
   /// Cache result time, default cache 1 hour
-  final Duration cache;
+  final cache;
 
   /// Customized rendering methods
-  final Widget Function(InfoBase info) builder;
+  final builder;
 
   /// Title style
-  final TextStyle titleStyle;
+  final titleStyle;
 
   /// Content style
-  final TextStyle bodyStyle;
+  final bodyStyle;
 
   /// Show image or video
   final bool showMultimedia;
 
   /// Whether to use multi-threaded analysis of web pages
-  final bool useMultithread;
+  final useMultithread;
 
   @override
   _FlutterLinkPreviewState createState() => _FlutterLinkPreviewState();
 }
 
 class _FlutterLinkPreviewState extends State<FlutterLinkPreview> {
-  String _url;
-  InfoBase _info;
+  var _url;
+  var _info;
 
   @override
   void initState() {

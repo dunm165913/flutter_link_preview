@@ -1,21 +1,21 @@
 part of flutter_link_preview;
 
 abstract class InfoBase {
-  DateTime _timeout;
+  late DateTime _timeout;
 }
 
 /// Web Information
 class WebInfo extends InfoBase {
-  final String title;
-  final String icon;
-  final String description;
-  final String image;
-  final String redirectUrl;
+  var title;
+  var icon;
+  var description;
+  var image;
+  var redirectUrl;
 
   WebInfo({
     this.title,
     this.icon,
-    this.description,
+     this.description,
     this.image,
     this.redirectUrl,
   });
@@ -23,14 +23,14 @@ class WebInfo extends InfoBase {
 
 /// Image Information
 class WebImageInfo extends InfoBase {
-  final String image;
+  var image;
 
   WebImageInfo({this.image});
 }
 
 /// Video Information
 class WebVideoInfo extends WebImageInfo {
-  WebVideoInfo({String image}) : super(image: image);
+  WebVideoInfo({var image}) : super(image: image);
 }
 
 /// Web analyzer
@@ -58,7 +58,7 @@ class WebAnalyzer {
   /// Get web information
   /// return [InfoBase]
   static InfoBase getInfoFromCache(String url) {
-    final InfoBase info = _map[url];
+    final InfoBase info = _map[url]!;
     if (info != null) {
       if (!info._timeout.isAfter(DateTime.now())) {
         _map.remove(url);
@@ -81,7 +81,7 @@ class WebAnalyzer {
       if (useMultithread)
         info = await _getInfoByIsolate(url, multimedia);
       else
-        info = await _getInfo(url, multimedia);
+        info = (await _getInfo(url, multimedia))!;
 
       if (cache != null && info != null) {
         info._timeout = DateTime.now().add(cache);
@@ -96,13 +96,13 @@ class WebAnalyzer {
     return info;
   }
 
-  static Future<InfoBase> _getInfo(String url, bool multimedia) async {
+  static Future<InfoBase?> _getInfo(String url, bool multimedia) async {
     final response = await _requestUrl(url);
 
     if (response == null) return null;
     // print("$url ${response.statusCode}");
     if (multimedia) {
-      final String contentType = response.headers["content-type"];
+      var contentType = response.headers["content-type"];
       if (contentType != null) {
         if (contentType.contains("image/")) {
           return WebImageInfo(image: url);
@@ -124,7 +124,7 @@ class WebAnalyzer {
     sendPort.send([answer.sendPort, url, multimedia]);
     final List<String> res = await answer.first;
 
-    InfoBase info;
+    var info;
     if (res != null) {
       if (res[0] == "0") {
         info = WebInfo(
@@ -148,7 +148,7 @@ class WebAnalyzer {
     sendPort.send(port.sendPort);
     port.listen((message) async {
       final SendPort sender = message[0];
-      final String url = message[1];
+      var url = message[1];
       final bool multimedia = message[2];
 
       final info = await _getInfo(url, multimedia);
@@ -175,9 +175,9 @@ class WebAnalyzer {
       true;
 
   static Future<Response> _requestUrl(String url,
-      {int count = 0, String cookie, useDesktopAgent = true}) async {
+      {int count = 0, var cookie, useDesktopAgent = true}) async {
     if (url.contains("m.toutiaoimg.cn")) useDesktopAgent = false;
-    Response res;
+    var res;
     final uri = Uri.parse(url);
     final ioClient = HttpClient()..badCertificateCallback = _certificateCheck;
     final client = IOClient(ioClient);
@@ -195,7 +195,7 @@ class WebAnalyzer {
     if (stream.statusCode == HttpStatus.movedTemporarily ||
         stream.statusCode == HttpStatus.movedPermanently) {
       if (stream.isRedirect && count < 6) {
-        final String location = stream.headers['location'];
+        var location = stream.headers['location'];
         if (location != null) {
           url = location;
           if (location.startsWith("/")) {
@@ -227,15 +227,15 @@ class WebAnalyzer {
     return res;
   }
 
-  static Future<InfoBase> _getWebInfo(
-      Response response, String url, bool multimedia) async {
+  static Future<InfoBase?> _getWebInfo(
+      var response, String url, bool multimedia) async {
     if (response.statusCode == HttpStatus.ok) {
-      String html;
+      String? html;
       try {
         html = const Utf8Decoder().convert(response.bodyBytes);
       } catch (e) {
         try {
-          html = gbk.decode(response.bodyBytes);
+          html = response.bodyBytes;
         } catch (e) {
           print("Web page resolution failure from:$url Error:$e");
         }
@@ -262,8 +262,8 @@ class WebAnalyzer {
         if (video != null) return video;
       }
 
-      String title = _analyzeTitle(document);
-      String description =
+      String? title = _analyzeTitle(document);
+      String? description =
           _analyzeDescription(document, html)?.replaceAll(r"\x0a", " ");
       if (!isNotEmpty(title)) {
         title = description;
@@ -285,18 +285,18 @@ class WebAnalyzer {
   static String _getHeadHtml(String html) {
     html = html.replaceFirst(_bodyReg, "<body></body>");
     final matchs = _metaReg.allMatches(html);
-    final StringBuffer head = StringBuffer("<html><head>");
+    var head = StringBuffer("<html><head>");
     if (matchs != null) {
       matchs.forEach((element) {
-        final String str = element.group(0);
-        if (str.contains(_titleReg)) head.writeln(str);
+        var str = element.group(0);
+        if (str!.contains(_titleReg)) head.writeln(str);
       });
     }
     head.writeln("</head></html>");
     return head.toString();
   }
 
-  static InfoBase _analyzeGif(Document document, Uri uri) {
+  static InfoBase? _analyzeGif( document, Uri uri) {
     if (_getMetaContent(document, "property", "og:image:type") == "image/gif") {
       final gif = _getMetaContent(document, "property", "og:image");
       if (gif != null) return WebImageInfo(image: _handleUrl(uri, gif));
@@ -304,14 +304,14 @@ class WebAnalyzer {
     return null;
   }
 
-  static InfoBase _analyzeVideo(Document document, Uri uri) {
+  static InfoBase? _analyzeVideo(document, Uri uri) {
     final video = _getMetaContent(document, "property", "og:video");
     if (video != null) return WebVideoInfo(image: _handleUrl(uri, video));
     return null;
   }
 
-  static String _getMetaContent(
-      Document document, String property, String propertyValue) {
+  static String? _getMetaContent(
+      var document, String property, String propertyValue) {
     final meta = document.head.getElementsByTagName("meta");
     final ele = meta.firstWhere((e) => e.attributes[property] == propertyValue,
         orElse: () => null);
@@ -319,7 +319,7 @@ class WebAnalyzer {
     return null;
   }
 
-  static String _analyzeTitle(Document document) {
+  static String _analyzeTitle(document) {
     final title = _getMetaContent(document, "property", "og:title");
     if (title != null) return title;
     final list = document.head.getElementsByTagName("title");
@@ -330,14 +330,14 @@ class WebAnalyzer {
     return "";
   }
 
-  static String _analyzeDescription(Document document, String html) {
+  static String? _analyzeDescription(document, String html) {
     final desc = _getMetaContent(document, "property", "og:description");
     if (desc != null) return desc;
 
     final description = _getMetaContent(document, "name", "description") ??
         _getMetaContent(document, "name", "Description");
 
-    if (!isNotEmpty(description)) {
+    if (!isNotEmpty(description!)) {
       // final DateTime start = DateTime.now();
       String body = html.replaceAll(_htmlReg, "");
       body = body.trim().replaceAll(_lineReg, " ").replaceAll(_spaceReg, " ");
@@ -350,7 +350,7 @@ class WebAnalyzer {
     return description;
   }
 
-  static String _analyzeIcon(Document document, Uri uri) {
+  static String _analyzeIcon(document, Uri uri) {
     final meta = document.head.getElementsByTagName("link");
     String icon = "";
     // get icon first
@@ -385,9 +385,9 @@ class WebAnalyzer {
     return _handleUrl(uri, icon);
   }
 
-  static String _analyzeImage(Document document, Uri uri) {
+  static String _analyzeImage(document, Uri uri) {
     final image = _getMetaContent(document, "property", "og:image");
-    return _handleUrl(uri, image);
+    return _handleUrl(uri, image!);
   }
 
   static String _handleUrl(Uri uri, String source) {
